@@ -1,14 +1,19 @@
 {
-  "name": "medoswift",
+  "name": "medoswift-api",
   "version": "1.0.0",
+  "type": "module",
   "private": true,
   "scripts": {
-    "install:all": "npm --prefix server install && npm --prefix client install",
-    "dev": "concurrently -n SERVER,CLIENT -c green,cyan \"npm --prefix server run dev\" \"npm --prefix client run dev\"",
-    "start": "concurrently -n SERVER,CLIENT -c green,cyan \"npm --prefix server start\" \"npm --prefix client start\"",
-    "seed": "npm --prefix server run seed"
+    "start": "node server.js",
+    "install": "npm install"
   },
-  "devDependencies": {
-    "concurrently": "^9.0.1"
+  "dependencies": {
+    "express": "^4.18.2",
+    "mongoose": "^7.0.0",
+    "socket.io": "^4.6.1",
+    "dotenv": "^16.0.3",
+    "cors": "^2.8.5",
+    "jsonwebtoken": "^9.0.0",
+    "bcryptjs": "^2.4.3"
   }
 }
