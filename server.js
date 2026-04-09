@@ -1,59 +1,52 @@
 import http from "http";
+import express from "express";
 import { Server } from "socket.io";
-import { createApp } from "./app.js";
-import { connectDb } from "./config/db.js";
-import { env } from "./config/env.js";
+import mongoose from "mongoose";
+import cors from "cors";
 
 async function main() {
-  // 1. Connect to DBaaS (MongoDB Atlas)
-  await connectDb();
+  // 1. Connect directly using the Environment Variable we set in Render
+  try {
+    await mongoose.connect(process.env.MONGO_URI);
+    console.log("✅ Connected to MongoDB Atlas (DBaaS)");
+  } catch (err) {
+    console.error("❌ DB Connection Error:", err);
+  }
 
-  const app = createApp();
+  // 2. Create the Express App inline (No need for app.js)
+  const app = express();
+  app.use(cors());
+  app.use(express.json());
+
+  app.get("/", (req, res) => {
+    res.send("✅ MedoSwift API is Live on PaaS!");
+  });
+
   const server = http.createServer(app);
 
-  // 2. Dynamic Port for PaaS (Crucial for Deployment)
-  // PaaS providers like Render/Railway inject a PORT variable
-  const PORT = process.env.PORT || env.port || 5000;
+  // 3. Dynamic Port for Render
+  const PORT = process.env.PORT || 10000;
 
-  // 3. Socket.io Configuration
-  // Note: env.clientUrl should be your Render Frontend URL after deployment
+  // 4. Socket.io Configuration
   const io = new Server(server, {
     cors: {
-      origin: [env.clientUrl, "http://localhost:5173"], // Allows both local and cloud frontend
+      origin: "*", // Allows your frontend to connect easily
       credentials: true
     },
   });
 
-  // Expose to routes for emitting
-  app.set("io", io);
-
   io.on("connection", (socket) => {
-    console.log(`New client connected: ${socket.id}`);
-
-    socket.on("join", ({ rooms }) => {
-      if (!Array.isArray(rooms)) return;
-      for (const r of rooms) socket.join(String(r));
-    });
-
-    socket.on("leave", ({ rooms }) => {
-      if (!Array.isArray(rooms)) return;
-      for (const r of rooms) socket.leave(String(r));
-    });
-
-    socket.on("disconnect", () => {
-      console.log("Client disconnected");
-    });
+    console.log(`Client connected: ${socket.id}`);
+    socket.on("disconnect", () => console.log("Disconnected"));
   });
 
-  // 4. Start Server
-  server.listen(PORT, () => {
-    // eslint-disable-next-line no-console
-    console.log(`✅ MedoSwift API running on port ${PORT}`);
+  // 5. Start Server
+  server.listen(PORT, "0.0.0.0", () => {
+    console.log(`🚀 MedoSwift running on port ${PORT}`);
   });
 }
 
 main().catch((e) => {
-  // eslint-disable-next-line no-console
   console.error("Fatal error:", e);
   process.exit(1);
 });
