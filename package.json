@@ -2,7 +2,7 @@
   "name": "medoswift-api",
   "version": "1.0.0",
   "type": "module",
-  "private": true,
+  "main": "server.js",
   "scripts": {
     "start": "node server.js",
     "install": "npm install"
